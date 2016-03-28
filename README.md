@@ -11,3 +11,5 @@ To start server, one machine should run main.cpp and specify the server port num
 After server is set, run snake.html to open the game html page.
 Input the server IP/port (i.e. 192.168.0.9 and 1234) and a user name to connect.
 After two player is connected, click on "start game" to play.
+
+Read About_code.doc to test those latency mitigations (including prediction and roll back).

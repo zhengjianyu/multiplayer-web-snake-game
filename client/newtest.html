@@ -1,0 +1,196 @@
+<html>
+	<head>
+	<style type="text/css">
+  p{
+    background-color: #3dd8da }
+  body {
+  	font-family: 'Corben', Georgia, Times, serif;
+    /*background-color: #e1ff90;*/
+    background-image: url("http://p1.pichost.me/i/66/1911707.jpg");
+    background-attachment: fixed;
+} 
+    h1{
+    	font-family: 'Nobile', Helvetica, Arial, sans-serif;
+    }
+  </style>
+		<title>Snake</title>
+		<style>
+		body{text-align:center}
+		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
+
+        #ip {line-height:20px}
+        #port {line-height:20px}
+		#username {line-height:20px}
+		#body {max-width:1000px;margin:auto}
+		#log {width:50%;height:60px}
+		#namelist {width:20%;height:60px}
+		#message {width:100%;line-height:20px}
+		</style>
+		<script src="jquery-1.12.0.min.js" type="text/javascript"></script>
+		<script src="fancywebsocket.js"></script>
+		<script src="function.js"></script>
+		<script>
+		var Server;
+		var Game;
+		//var time = 0;
+		//var date = new Date(); 
+	   
+		function log( text ) {
+			$log = $('#log');
+			//Add text to log
+			$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+			$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+		}
+		
+		function namelist( text ) {
+			$namelist = $('#namelist');
+			//Add text to log
+			$namelist.append(($namelist.val()?"\n":'')+text);
+			//Autoscroll
+			$namelist[0].scrollTop = $namelist[0].scrollHeight - $namelist[0].clientHeight;
+		}
+
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+
+        function connect(){
+            log('Connecting...');
+			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+			
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					send( this.value );
+
+					$(this).val('');
+				}
+			});
+
+			//Let the user know we're connected
+			Server.bind('open', function() {
+                document.getElementById("cntBtn").disabled = true;
+				send("@"+document.getElementById('username').value);
+				send("#opengame");
+				send("#showname");
+				send("#checkgame");
+				log( "Connected." );
+			});
+
+			//OH NOES! Disconnection occurred.
+			Server.bind('close', function( data ) {
+                document.getElementById("cntBtn").disabled = false;
+				Game.gameover();
+				log( "Disconnected." );
+			});
+
+			//Log any messages sent from server
+			Server.bind('message', function( payload ) {
+				//log(payload);
+				var x = payload.split("|")[0];
+				var y = payload.split("|")[1];
+				//var process_time = payload.split("|")[2];
+				//log(x);
+				//log(y);
+				//log(process_time);
+				//log(payload);
+				if (x == "#"){
+					//document.write("rungame")
+					if (y == "1" && Game == null){
+						Game = new SnakeGame("1");
+						Game.canvasdata();
+					}
+					else if (y == "2" && Game == null){
+						Game = new SnakeGame("2");
+						//Game.canvasdata();
+					}
+					else if (y == "GAMEREADY"){
+						document.getElementById("btn").disabled = false;
+					}
+					else if (y == "RUNGAME"){
+						log("--------Game Start--------");
+						Game.init();
+					}
+				}
+				//if (x == "+")
+				//	Game.change_dir(y);
+				
+				
+				else if (x == "@")
+					log(y);
+					
+					
+					
+				//if (x == "$")
+				//	Game.change_score(y);
+				//else if (x == "!")
+					//log(y);
+				else if (x == "%")
+					namelist(y);
+				//else if (x == "*"){
+					//log("--------Game Over--------");
+					//var yellowscore = y.split(",")[0];
+					//var greenscore = y.split(",")[1];
+					//log("Yellow Score: "+yellowscore+"  Green Score: "+greenscore);
+					//send("#startgame");
+					//log("original:  " + y);
+					//var xpos = y.split(",")[0];
+					//var ypos = y.split(",")[1];
+					//log("new:  " + y);
+					//Game.food_pos(parseInt(xpos), parseInt(ypos));
+				//}
+				else if (x == "&"){
+					Game.draw(y);
+					time = Date.now();
+				}
+				else if (x == "+"){
+					Game.cal_time(parseInt(y));
+					//if (time == 0){
+						//time = Date.now();
+					//}
+					
+					//else{
+						//var curtime = Date.now();
+						//log(y);
+						//var Client_time = curtime - time;
+						//var latency = (Client_time - parseInt(y))/2;
+						//log (process_time);
+						//var latency = Math.round(Math.random()*300) + 500;
+						
+						//time = Date.now();
+					//}
+				}
+				//else{
+					//log(payload);
+				//}
+			});
+			
+			Server.connect();
+        }
+
+		</script>
+	</head>
+	<body>
+		<div id='body'><font color="white">
+        Server ip: <input type='text' id='ip' name='ip'>
+        Server port: <input type='text' id='port' name='port'>
+		Username: </font><input type='text' id='username' name='username'>
+		<button type="button" id='cntBtn' onClick="connect();">Connect</button>
+		<input type="button" name="" id="btn" value="start game" disabled="disabled" onclick=fn() /><br/><br/>
+		<div style="font-size:14px"; ><font color="#19fbfe"><h1>Made by: Jianyu Zheng (Jerry Zheng)</h1><br/></div>
+		<div style="font-size:14px;">Please click <font color="#fef365">connect</font> and <font color="#65fe67">start game</font> after specifying the server information and your ID.<br/><br/></div>
+        <textarea id='log' name='log' readonly='readonly'></textarea>
+		<textarea id='namelist' name='namelist' readonly='readonly'></textarea><br/>
+		</div>
+		
+		<div style="font-size:60px;" ><font color="#fe3532"><strong>Snake Game</p></font></strong>
+		<img src="https://lh4.ggpht.com/ybFK2vs6P7dyg3d_haDb5WdEI4_3aOYhIvPmiT6MxHPatyZEcrdZEyusUacRhFgPe_XU=w300" style="width:128px;height:128px;">
+		<font color="#fe3532"><strong>VS</font></strong>
+		<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT65oW8kwdkUYXmncCotEBcSiN5F2U_lUAZd7WxPcG8KHPRlGSEmA" style="width:128px;height:128px;">
+		<div style="font-size:16px;"><span><font color="#fef365"><font color="red">Players control: W,A,S,D</font></span><span style="margin-left:100px;"><span><font color="#fef365">Player1(Yellow)</font><font color="#65fe67">Player2(Green) </font></span><br/><br/></div>
+		<canvas id="canvas" width="450" height="450"></canvas>
+		
+		
+	</body>
+</html>

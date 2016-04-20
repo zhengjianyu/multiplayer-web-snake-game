@@ -22,3 +22,4 @@ After two player is connected, click on "start game" to play.
 
 
 Read About_code.doc to test those latency mitigations (including prediction and roll back).
+
